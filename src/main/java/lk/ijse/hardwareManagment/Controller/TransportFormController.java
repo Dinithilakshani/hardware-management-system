@@ -2,25 +2,31 @@ package lk.ijse.hardwareManagment.Controller;
 
 
 
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import lk.ijse.hardwareManagment.db.DbConnection;
+import lk.ijse.hardwareManagment.dto.EmployeeDto;
+import lk.ijse.hardwareManagment.dto.TransportDeto;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.ResourceBundle;
 
-public class TransportFormController {
+public class TransportFormController  implements Initializable {
 
         @FXML
         private Button btnBack;
@@ -37,7 +43,20 @@ public class TransportFormController {
         @FXML
         private Button btnUpdate;
 
-        @FXML
+    @FXML
+    private TableColumn<?, ?> colArea;
+
+    @FXML
+    private TableColumn<?, ?> colId;
+
+    @FXML
+    private TableColumn<?, ?> colTime;
+
+    @FXML
+    private TableView<Object> tblTransport;
+
+
+    @FXML
         private TextField texTime;
 
         @FXML
@@ -46,25 +65,24 @@ public class TransportFormController {
         @FXML
         private TextField txtArea;
 
-        @FXML
-        private TextField txtQty;
+
     private AnchorPane root;
 
     @FXML
         void BtnSaveOnAction(ActionEvent event) {
             String id = this.textId.getText();
             String area = this.txtArea.getText();
-            String qty= this.txtQty.getText();
+
             String time = this.texTime.getText();
-            String sql = "INSERT INTO Transport VALUES(?, ?, ?, ?)";
+            String sql = "INSERT INTO transportDetails VALUES(?, ?, ?, ?)";
 
             try {
                 Connection connection = DbConnection.getInstance().getConnection();
                 PreparedStatement pstm = connection.prepareStatement(sql);
-                pstm.setObject(1, id);
-                pstm.setObject(2, area);
-                pstm.setObject(3, qty);
-                pstm.setObject(4,time );
+                pstm.setObject(3, id);
+                pstm.setObject(1, area);
+
+                pstm.setObject(2,time );
                 boolean isSaved = pstm.executeUpdate() > 0;
                 if (isSaved) {
                     (new Alert(Alert.AlertType.CONFIRMATION, "Transport saved!", new ButtonType[0])).show();
@@ -80,15 +98,7 @@ public class TransportFormController {
 
 
 
-        @FXML
-        void btnBackOnAction(ActionEvent event) throws IOException {
-                AnchorPane anchorPane = (AnchorPane) FXMLLoader.load(this.getClass().getResource("/view/Dashboardform.fxml"));
-                Stage stage = (Stage)this.root.getScene().getWindow();
-                stage.setScene(new Scene(anchorPane));
-                stage.setTitle("Dashboard Form");
-                stage.centerOnScreen();
 
-        }
 
         @FXML
         void btnClierOnAction(ActionEvent event) {this.clearFields();
@@ -98,7 +108,7 @@ public class TransportFormController {
         @FXML
         void btnDeleteOnAction(ActionEvent event) {
             String id = this.textId.getText();
-            String sql = "DELETE FROM Ttansport WHERE id = ?";
+            String sql = "DELETE FROM tansportDetails WHERE T_id = ?";
 
             try {
                 PreparedStatement pstm = DbConnection.getInstance().getConnection().prepareStatement(sql);
@@ -115,7 +125,7 @@ public class TransportFormController {
 
     private void clearFields() {
         this.textId.setText("");
-        this.txtQty.setText("");
+
         this.txtArea.setText("");
         this.texTime.setText("");
     }
@@ -128,17 +138,17 @@ public class TransportFormController {
         @FXML
         void btnUpdateOnAction(ActionEvent event) {
             String id = this.textId.getText();
-            String qty = this.txtQty.getText();
+
             String area= this.txtArea.getText();
             String time= this.texTime.getText();
-            String sql = "UPDATE Transport SET time = ?, Qty = ?, area = ? WHERE id = ?";
+            String sql = "UPDATE TransportDetails SET t_time = ?, T_area = ? WHERE T_id = ?";
 
             try {
                 PreparedStatement pstm = DbConnection.getInstance().getConnection().prepareStatement(sql);
-                pstm.setObject(1, id);
-                pstm.setObject(2, qty);
-                pstm.setObject(3, area);
-                pstm.setObject(4, time);
+                pstm.setObject(3, id);
+
+                pstm.setObject(1, area);
+                pstm.setObject(2, time);
                 if (pstm.executeUpdate() > 0) {
                     (new Alert(Alert.AlertType.CONFIRMATION, "Transport updated!", new ButtonType[0])).show();
                     this.clearFields();
@@ -149,7 +159,41 @@ public class TransportFormController {
 
         }
 
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        colArea.setCellValueFactory(new PropertyValueFactory<>("T_area"));
+        colId.setCellValueFactory(new PropertyValueFactory<>("T_id"));
+        colTime.setCellValueFactory(new PropertyValueFactory<>("t_time"));
+
+        loadTableData();
+
+    }
+
+    private void loadTableData() {
+        ArrayList<Object> Transport1 = new ArrayList<>();
+
+        try {
+            Connection connection = DbConnection.getInstance().getConnection();
+            PreparedStatement pstm = connection.prepareStatement("select * from transportDetails");
+            ResultSet resultSet = pstm.executeQuery();
+            while (resultSet.next()) {
+
+                TransportDeto transportDeto = new TransportDeto(
+                        resultSet.getString(1),
+                        resultSet.getString(2),
+                        resultSet.getInt(3)
+
+                );
+                Transport1.add(transportDeto);
+
+            }
+            tblTransport.setItems(FXCollections.observableList(Transport1));
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
+
+    }
+}
 
 
 

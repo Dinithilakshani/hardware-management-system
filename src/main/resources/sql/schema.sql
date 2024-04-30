@@ -7,7 +7,8 @@ CREATE TABLE customer(
                          id VARCHAR(6) PRIMARY KEY,
                          name VARCHAR(30),
                          address VARCHAR(30),
-                         email varchar(30)
+                         email varchar(30),
+                        contactnumber INT
 );
 
 CREATE TABLE orders(

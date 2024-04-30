@@ -3,21 +3,25 @@ package lk.ijse.hardwareManagment.Controller;
 
 
 
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
 import lk.ijse.hardwareManagment.db.DbConnection;
+import lk.ijse.hardwareManagment.dto.EmployeeDto;
 
-import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.ResourceBundle;
 
-public class EmployeeFormController {
+public class EmployeeFormController implements Initializable {
 
     @FXML
     private Button BtnClear;
@@ -48,7 +52,7 @@ public class EmployeeFormController {
     private TableColumn<?, ?> colNumber;
 
     @FXML
-    private TableView<?> tblEmployee;
+    private TableView<Object> tblEmployee;
 
 
     @FXML
@@ -66,7 +70,8 @@ public class EmployeeFormController {
 
 
     @FXML
-    void BtnClearOnAction(ActionEvent event) {this.clearFields();
+    void BtnClearOnAction(ActionEvent event) {
+        this.clearFields();
 
     }
 
@@ -82,12 +87,14 @@ public class EmployeeFormController {
             Connection connection = DbConnection.getInstance().getConnection();
             PreparedStatement pstm = connection.prepareStatement(sql);
             pstm.setObject(1, id);
-            pstm.setObject(2, name);
+            pstm.setObject(4, name);
             pstm.setObject(3, address);
-            pstm.setObject(4, tel);
+            pstm.setObject(2, tel);
             boolean isSaved = pstm.executeUpdate() > 0;
             if (isSaved) {
                 (new Alert(Alert.AlertType.CONFIRMATION, "Employee saved!", new ButtonType[0])).show();
+                loadTableData();
+
                 this.clearFields();
             }
         } catch (SQLException var10) {
@@ -114,13 +121,15 @@ public class EmployeeFormController {
 
         try {
             PreparedStatement pstm = DbConnection.getInstance().getConnection().prepareStatement(sql);
-            pstm.setObject(1, name);
-            pstm.setObject(2, address);
-            pstm.setObject(3, contactnumber);
-            pstm.setObject(4, eid);
+            pstm.setObject(4, name);
+            pstm.setObject(3, address);
+            pstm.setObject(2, contactnumber);
+            pstm.setObject(1, eid);
             if (pstm.executeUpdate() > 0) {
                 (new Alert(Alert.AlertType.CONFIRMATION, "Employee updated!", new ButtonType[0])).show();
                 this.clearFields();
+                loadTableData();
+
             }
         } catch (SQLException var8) {
             (new Alert(Alert.AlertType.ERROR, var8.getMessage(), new ButtonType[0])).show();
@@ -132,7 +141,7 @@ public class EmployeeFormController {
     @FXML
     void btnDeleteOnAction(ActionEvent event) {
         String id = this.txtid.getText();
-        String sql = "DELETE FROM Employee WHERE id = ?";
+        String sql = "DELETE FROM Employee WHERE eid = ?";
 
         try {
             PreparedStatement pstm = DbConnection.getInstance().getConnection().prepareStatement(sql);
@@ -140,25 +149,52 @@ public class EmployeeFormController {
             if (pstm.executeUpdate() > 0) {
                 (new Alert(Alert.AlertType.CONFIRMATION, "customer deleted!", new ButtonType[0])).show();
                 this.clearFields();
+                loadTableData();
+
             }
         } catch (SQLException var5) {
             (new Alert(Alert.AlertType.ERROR, var5.getMessage(), new ButtonType[0])).show();
+
+
+        }
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        colNumber.setCellValueFactory(new PropertyValueFactory<>("contactnumber"));
+        colId.setCellValueFactory(new PropertyValueFactory<>("eid"));
+        colAdresss.setCellValueFactory(new PropertyValueFactory<>("address"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        loadTableData();
+
+
+    }
+
+    private void loadTableData() {
+        ArrayList<Object> Employee1 = new ArrayList<>();
+
+        try {
+            Connection connection = DbConnection.getInstance().getConnection();
+            PreparedStatement pstm = connection.prepareStatement("select * from Employee");
+            ResultSet resultSet = pstm.executeQuery();
+            while (resultSet.next()) {
+
+                EmployeeDto employeeDto = new EmployeeDto(
+                        resultSet.getString(4),
+                        resultSet.getString(3),
+                        resultSet.getString(1),
+                        resultSet.getInt(2)
+
+                );
+                Employee1.add(employeeDto);
+
+            }
+            tblEmployee.setItems(FXCollections.observableList(Employee1));
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
 
     }
-    @FXML
-    void btnBackOnAction(ActionEvent event) throws IOException {
-        AnchorPane anchorPane = (AnchorPane) FXMLLoader.load(this.getClass().getResource("/view/Dashboard.fxml"));
-        Stage stage = (Stage)this.root.getScene().getWindow();
-        stage.setScene(new Scene(anchorPane));
-        stage.setTitle("Dashboard Form");
-        stage.centerOnScreen();
 
-
-    }
 }
-
-
-
-
-

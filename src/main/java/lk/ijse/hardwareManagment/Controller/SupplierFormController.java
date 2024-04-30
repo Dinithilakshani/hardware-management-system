@@ -4,22 +4,26 @@ package lk.ijse.hardwareManagment.Controller;
 
 
 
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
 import lk.ijse.hardwareManagment.db.DbConnection;
+import lk.ijse.hardwareManagment.dto.ItemDto;
+import lk.ijse.hardwareManagment.dto.SupplierDto;
 
-import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.ResourceBundle;
 
-public class SupplierFormController {
+public class SupplierFormController implements Initializable {
 
     @FXML
     private Button btnClear;
@@ -52,7 +56,7 @@ public class SupplierFormController {
     private TableColumn<?, ?> colNum;
 
     @FXML
-    private TableView<?> tblSupplier;
+    private TableView<Object> tblSupplier;
 
     @FXML
     private TextField txtAddress;
@@ -67,16 +71,8 @@ public class SupplierFormController {
     private TextField txtname;
     private AnchorPane root;
 
-    @FXML
-    void btnBackOnAction(ActionEvent event) throws IOException {
-        AnchorPane anchorPane = (AnchorPane) FXMLLoader.load(this.getClass().getResource("/view/Dashboardform.fxml"));
-        Stage stage = (Stage)this.root.getScene().getWindow();
-        stage.setScene(new Scene(anchorPane));
-        stage.setTitle("Dashboard Form");
-        stage.centerOnScreen();
 
 
-    }
 
 
 
@@ -88,13 +84,14 @@ public class SupplierFormController {
     @FXML
     void btnDeleteOnAction(ActionEvent event) {
         String id = this.txtid.getText();
-        String sql = "DELETE FROM Supplier WHERE id = ?";
+        String sql = "DELETE FROM Supplier WHERE SId = ?";
 
         try {
             PreparedStatement pstm = DbConnection.getInstance().getConnection().prepareStatement(sql);
             pstm.setObject(1, id);
             if (pstm.executeUpdate() > 0) {
                 (new Alert(Alert.AlertType.CONFIRMATION, "Supplier deleted!", new ButtonType[0])).show();
+                loadTableData();
                 this.clearFields();
             }
         } catch (SQLException var5) {
@@ -118,11 +115,12 @@ public class SupplierFormController {
             PreparedStatement pstm = connection.prepareStatement(sql);
             pstm.setObject(1, id);
             pstm.setObject(2, name);
-            pstm.setObject(3, address);
-            pstm.setObject(4, tel);
+            pstm.setObject(4, address);
+            pstm.setObject(3, tel);
             boolean isSaved = pstm.executeUpdate() > 0;
             if (isSaved) {
                 (new Alert(Alert.AlertType.CONFIRMATION, "Supplier saved!", new ButtonType[0])).show();
+                loadTableData();
                 this.clearFields();
             }
         } catch (SQLException var10) {
@@ -145,7 +143,7 @@ public class SupplierFormController {
     @FXML
     void btnSearchOnAction(ActionEvent event) {
         String id = this.txtid.getText();
-        String sql = "SELECT * FROM Supplier WHERE id = ?";
+        String sql = "SELECT * FROM Supplier WHERE SId = ?";
 
         try {
             Connection connection = DbConnection.getInstance().getConnection();
@@ -174,18 +172,19 @@ public class SupplierFormController {
     void btnUpdateOnAction(ActionEvent event) {
         String eid = this.txtid.getText();
         String name = this.txtname.getText();
-        String address = this.txtAddress.getText();
+        String emailaddress = this.txtAddress.getText();
         String contactnumber = this.txtNumber.getText();
-        String sql = "UPDATE Supplier SET name = ?, address = ?, contactnumber = ? WHERE eid = ?";
+        String sql = "UPDATE Supplier SET SName = ?, emailaddress = ?, contactnumber = ? WHERE SId = ?";
 
         try {
             PreparedStatement pstm = DbConnection.getInstance().getConnection().prepareStatement(sql);
             pstm.setObject(1, name);
-            pstm.setObject(2, address);
+            pstm.setObject(2, emailaddress);
             pstm.setObject(3, contactnumber);
             pstm.setObject(4, eid);
             if (pstm.executeUpdate() > 0) {
                 (new Alert(Alert.AlertType.CONFIRMATION, "Supplier updated!", new ButtonType[0])).show();
+                loadTableData();
                 this.clearFields();
             }
         } catch (SQLException var8) {
@@ -194,7 +193,49 @@ public class SupplierFormController {
 
     }
 
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        colEmail.setCellValueFactory(new PropertyValueFactory<>("emailaddress"));
+        colId.setCellValueFactory(new PropertyValueFactory<>("SID"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("SName"));
+        colNum.setCellValueFactory(new PropertyValueFactory<>("contactnumber"));
+
+        loadTableData();
+
     }
+
+    private void loadTableData() {
+        ArrayList<Object> Supplier = new ArrayList<>();
+
+        try {
+            Connection connection = DbConnection.getInstance().getConnection();
+            PreparedStatement pstm = connection.prepareStatement("select * from Supplier");
+            ResultSet resultSet = pstm.executeQuery();
+            while (resultSet.next()) {
+
+                SupplierDto supplierDto = new SupplierDto(
+                        resultSet.getString(1),
+                        resultSet.getString(2),
+                        resultSet.getString(4),
+                        resultSet.getString(3)
+
+
+
+
+
+                );
+                Supplier.add(supplierDto);
+
+            }
+            tblSupplier.setItems(FXCollections.observableList(Supplier));
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
+    }
+
 
 
 

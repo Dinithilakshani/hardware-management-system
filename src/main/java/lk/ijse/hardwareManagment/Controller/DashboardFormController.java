@@ -15,6 +15,7 @@ import java.security.cert.PolicyNode;
 public class DashboardFormController {
 
     public Pane mainPane;
+    public AnchorPane planeAnchor;
     @FXML
     private Button btnCustomer;
 
@@ -26,7 +27,6 @@ public class DashboardFormController {
 
     @FXML
     private Button btnLogout;
-
 
 
     @FXML
@@ -52,6 +52,7 @@ public class DashboardFormController {
         setUi("Employee");
 
     }
+
     @FXML
     void btnItemOnAction(ActionEvent event) {
         setUi("item");
@@ -66,20 +67,18 @@ public class DashboardFormController {
 
     @FXML
     void btnLogoutOnAction(ActionEvent event) throws IOException {
-        AnchorPane anchorPane = (AnchorPane) FXMLLoader.load(this.getClass().getResource("/view/login.fxml"));
-        Stage stage = (Stage) this.rootNode.getScene().getWindow();
-        stage.setScene(new Scene(anchorPane));
-        stage.setTitle("Login Form");
-        stage.centerOnScreen();
+
+
+        Stage stage = new Stage();
+        stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/view/login.fxml"))));
+        stage.show();
+        Stage window = (Stage) planeAnchor.getScene().getWindow();
+        window.close();
     }
 
 
-
-
-
-
     @FXML
-    void btnSupplierOnAction(ActionEvent event)  {
+    void btnSupplierOnAction(ActionEvent event) {
         setUi("Supplier");
 
     }
@@ -100,3 +99,4 @@ public class DashboardFormController {
         }
     }
 }
+

@@ -5,17 +5,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString
-public class Customerdto {
-
+public class EmployeeDto {
 
     private String name;
-    private int id;
-    private String address;
-    private String contact;
-    private String Email;
+    private String Address;
+    private String id;
+    private int contactnumber;
 }
-
